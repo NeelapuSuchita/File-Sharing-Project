@@ -4,6 +4,19 @@ import os  # <-- Step 1: Import os module
 
 HOST = '127.0.0.1'
 PORT = 9000
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.bind((HOST, PORT))
+    s.listen()
+    print("Listening on", HOST, PORT)
+    conn, addr = s.accept()
+    with conn:
+        print("Connected by", addr)
+        conn.sendall(b"HELLO\n")
+        data = conn.recv(1024)
+        print("Received:", data)
+
+
 SERVER_DIR = 'SERVER_FILES'  # <-- Step 2: Define shared directory
 
 # Ensure the shared directory exists
