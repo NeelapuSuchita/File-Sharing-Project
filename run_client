@@ -1,0 +1,10 @@
+def run_client():
+    # ... (connection logic) ...
+
+    # ... (LIST and DOWNLOAD test logic) ...
+        
+    # --- TEST UPLOAD (Day 4) ---
+    # 📢 IMPORTANT: Create this file inside your 'CLIENT_DOWNLOADS' folder first!
+    upload_file(s, "file_to_upload.txt") 
+    
+    print("Client closing connection.")
