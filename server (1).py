@@ -81,6 +81,32 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Use conn inside a function or a thread for better structure
         handle_client(conn, addr)
 
+        # --- Current structure inside handle_client(conn, addr): ---
+    while True:
+        try:
+            # ... (receive command logic) ...
+            command = data.decode().strip()
+
+            # --- Day 2: Implement LIST command ---
+            if command == "LIST":
+                # ... (LIST logic) ...
+            
+            # --- Day 3: Implement DOWNLOAD command ---
+            elif command.startswith("DOWNLOAD"):
+                # ... (DOWNLOAD logic) ...
+            
+            # 📢 INSERT THE DAY 4 UPLOAD LOGIC HERE 📢
+            # --- Day 4: Implement UPLOAD command (Client to Server) ---
+            elif command.startswith("UPLOAD"):
+                # COPY AND PASTE THE CODE BLOCK BELOW HERE
+                # ...
+            
+            else:
+                conn.sendall(b"Unknown command.")
+
+        except Exception as e:
+# ... (rest of function) ...
+
 # ... (after the elif command.startswith("DOWNLOAD"): block) ...
             
             # --- Day 4: Implement UPLOAD command (Client to Server) ---
