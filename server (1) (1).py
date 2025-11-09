@@ -1,179 +1,34 @@
-# server.py - Day 5: Authentication
+# server.py - Complete implementation (Day 1 to Day 5)
+import socket
+import os
 
-# --- Authentication Configuration ---
+# --- Authentication Configuration (Day 5) ---
 VALID_USERS = {
     "user1": "pass123",
     "admin": "securepwd"
 }
-# ------------------------------------
 
-
-# server.py - Updated for LIST and initial command handling
-import socket
-import os  # <-- Step 1: Import os module
-
+# --- Network Configuration (Day 1) ---
 HOST = '127.0.0.1'
 PORT = 9000
-
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind((HOST, PORT))
-    s.listen()
-    print("Listening on", HOST, PORT)
-    conn, addr = s.accept()
-    with conn:
-        print("Connected by", addr)
-        conn.sendall(b"HELLO\n")
-        data = conn.recv(1024)
-        print("Received:", data)
-
-
-SERVER_DIR = 'SERVER_FILES'  # <-- Step 2: Define shared directory
+SERVER_DIR = 'SERVER_FILES'
 
 # Ensure the shared directory exists
 os.makedirs(SERVER_DIR, exist_ok=True)
 print(f"Server will share files from: {SERVER_DIR}")
 
+
 def handle_client(conn, addr):
-    """Handles commands from a single client connection."""
-    print(f"Connected by {addr}")
-    conn.sendall(b"HELLO FROM SERVER\n")
-
-    # Main command loop: Server listens for commands until client disconnects
-    while True:
-        try:
-            # Receive up to 1024 bytes (e.g., "LIST" or "DOWNLOAD file.txt")
-            data = conn.recv(1024)
-            if not data:
-                print(f"Client {addr} disconnected.")
-                break
-            
-            command = data.decode().strip()
-            print(f"Received command: '{command}'")
-
-            # --- Day 2: Implement LIST command ---
-            if command == "LIST":
-                # 1. Get the list of files in the shared directory
-                file_list = [f for f in os.listdir(SERVER_DIR) if os.path.isfile(os.path.join(SERVER_DIR, f))]
-                
-                # 2. Format the list into a single string
-                list_response = "\n".join(file_list)
-                
-                if not file_list:
-                     list_response = "No files found in SERVER_FILES."
-
-                # 3. Send the list back to the client
-                conn.sendall(list_response.encode())
-                print("Sent file list to client.")
-            
-            elif command.startswith("DOWNLOAD"):
-                # Day 3 logic will go here
-                conn.sendall(b"COMMAND_DOWNLOAD_RECEIVED") # Placeholder response
-
-            else:
-                conn.sendall(b"Unknown command.")
-
-        except Exception as e:
-            print(f"An error occurred with client {addr}: {e}")
-            break
-            
-    conn.close()
-
-
-# Server listening setup
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind((HOST, PORT))
-    s.listen(5) # Listen for up to 5 connections
-    print(f"Listening on {HOST}:{PORT} ...")
-    
-    # Simple single-threaded server (replace with threading for multiple clients later)
-    while True:
-        conn, addr = s.accept()
-        # Use conn inside a function or a thread for better structure
-        handle_client(conn, addr)
-
-        # --- Current structure inside handle_client(conn, addr): ---
-    while True:
-        try:
-            # ... (receive command logic) ...
-            command = data.decode().strip()
-
-            # --- Day 2: Implement LIST command ---
-            if command == "LIST":
-                # ... (LIST logic) ...
-            
-            # --- Day 3: Implement DOWNLOAD command ---
-            elif command.startswith("DOWNLOAD"):
-                # ... (DOWNLOAD logic) ...
-            
-            # 📢 INSERT THE DAY 4 UPLOAD LOGIC HERE 📢
-            # --- Day 4: Implement UPLOAD command (Client to Server) ---
-            elif command.startswith("UPLOAD"):
-                # COPY AND PASTE THE CODE BLOCK BELOW HERE
-                # ...
-            
-            else:
-                conn.sendall(b"Unknown command.")
-
-        except Exception as e:
-# ... (rest of function) ...
-
-# ... (after the elif command.startswith("DOWNLOAD"): block) ...
-            
-            # --- Day 4: Implement UPLOAD command (Client to Server) ---
-            elif command.startswith("UPLOAD"):
-                # 1. Parse filename and receive the 10-byte size header
-                parts = command.split(maxsplit=1)
-                if len(parts) < 2:
-                    conn.sendall(b"ERROR: Missing upload filename".encode())
-                    continue
-                
-                filename = parts[1]
-                filepath = os.path.join(SERVER_DIR, filename)
-                
-                # Send ACK to client to proceed with size and data transfer
-                conn.sendall(b"READY_FOR_UPLOAD")
-                
-                # Receive the file size header (10 bytes)
-                size_header = conn.recv(10).decode()
-                filesize = int(size_header)
-                
-                if filesize == 0:
-                    print(f"Error: Client tried to upload empty/non-existent file: {filename}")
-                    continue
-
-                # 2. Receive file content in chunks
-                received_bytes = 0
-                print(f"Receiving {filename} ({filesize} bytes) from client...")
-                
-                with open(filepath, 'wb') as f: # 'wb' for write binary
-                    while received_bytes < filesize:
-                        remaining = filesize - received_bytes
-                        bytes_to_read = min(1024, remaining)
-                        bytes_read = conn.recv(bytes_to_read)
-                        
-                        if not bytes_read:
-                            break # Connection closed unexpectedly
-                            
-                        f.write(bytes_read)
-                        received_bytes += len(bytes_read)
-
-                if received_bytes == filesize:
-                    print(f"Upload complete: {filename} saved on server.")
-                    conn.sendall(b"UPLOAD_SUCCESS")
-                else:
-                    print(f"Upload FAILED: Only received {received_bytes}/{filesize} bytes.")
-                    conn.sendall(b"UPLOAD_FAIL")
-                    
-# server.py - Updated handle_client with Day 5 Authentication
-def handle_client(conn, addr):
-    """Handles commands from a single client connection, requiring login."""
+    """
+    Handles commands (LIST, DOWNLOAD, UPLOAD, LOGIN) from a client connection.
+    Requires successful login before file operations are permitted (Day 5).
+    """
     print(f"Connected by {addr}")
     conn.sendall(b"HELLO FROM SERVER. PLEASE LOGIN.\n")
     
     # --- Day 5: Initialize Session State ---
     logged_in = False
     
-    # Main command loop: Server listens for commands until client disconnects
     while True:
         try:
             data = conn.recv(1024)
@@ -203,29 +58,91 @@ def handle_client(conn, addr):
             
             # --- Enforce Authentication for all File Commands ---
             elif logged_in:
+                
                 # --- Day 2: Implement LIST command ---
                 if command == "LIST":
-                    # ... (Your existing LIST logic goes here) ...
                     file_list = [f for f in os.listdir(SERVER_DIR) if os.path.isfile(os.path.join(SERVER_DIR, f))]
                     list_response = "\n".join(file_list)
-                    if not file_list: list_response = "No files found in SERVER_FILES."
+                    if not file_list: 
+                        list_response = "No files found in SERVER_FILES."
+                    
                     conn.sendall(list_response.encode())
                     print("Sent file list to client.")
 
                 # --- Day 3: Implement DOWNLOAD command ---
                 elif command.startswith("DOWNLOAD"):
-                    # ... (Your existing DOWNLOAD logic goes here, too long to include here) ...
-                    # If you use the code I provided earlier, the download logic should be placed here.
-                    
-                    # Placeholder for the actual download logic
-                    conn.sendall(b"COMMAND_DOWNLOAD_RECEIVED") # Remove this line and put the actual logic
+                    parts = command.split(maxsplit=1)
+                    if len(parts) < 2:
+                        conn.sendall(b"ERROR: Missing filename".encode())
+                        continue
 
+                    filename = parts[1]
+                    filepath = os.path.join(SERVER_DIR, filename)
+
+                    try:
+                        # 1. Get file size and send the size as a 10-byte header
+                        filesize = os.path.getsize(filepath)
+                        size_header = str(filesize).zfill(10).encode() 
+                        conn.sendall(size_header)
+                        
+                        # 2. Send the file content in chunks
+                        with open(filepath, 'rb') as f:
+                            while True:
+                                bytes_read = f.read(1024)
+                                if not bytes_read:
+                                    break # File transmission is done
+                                conn.sendall(bytes_read)
+
+                        print(f"Sent {filename} ({filesize} bytes) to client.")
+                    except FileNotFoundError:
+                        # Signal file not found by sending a size of 0
+                        conn.sendall(b"0000000000") 
+                        print(f"Error: File '{filename}' not found.")
+                
                 # --- Day 4: Implement UPLOAD command ---
                 elif command.startswith("UPLOAD"):
-                    # ... (Your existing UPLOAD logic goes here, too long to include here) ...
+                    parts = command.split(maxsplit=1)
+                    if len(parts) < 2:
+                        conn.sendall(b"ERROR: Missing upload filename".encode())
+                        continue
                     
-                    # Placeholder for the actual upload logic
-                    conn.sendall(b"COMMAND_UPLOAD_RECEIVED") # Remove this line and put the actual logic
+                    filename = parts[1]
+                    filepath = os.path.join(SERVER_DIR, filename)
+                    
+                    # Send ACK to client to proceed with size and data transfer
+                    conn.sendall(b"READY_FOR_UPLOAD")
+                    
+                    # Receive the file size header (10 bytes)
+                    size_header = conn.recv(10).decode()
+                    filesize = int(size_header)
+                    
+                    if filesize == 0:
+                        print(f"Error: Client tried to upload empty/non-existent file: {filename}")
+                        conn.sendall(b"UPLOAD_FAIL")
+                        continue
+
+                    # Receive file content in chunks
+                    received_bytes = 0
+                    print(f"Receiving {filename} ({filesize} bytes) from client...")
+                    
+                    with open(filepath, 'wb') as f:
+                        while received_bytes < filesize:
+                            remaining = filesize - received_bytes
+                            bytes_to_read = min(1024, remaining)
+                            bytes_read = conn.recv(bytes_to_read)
+                            
+                            if not bytes_read:
+                                break
+                                
+                            f.write(bytes_read)
+                            received_bytes += len(bytes_read)
+
+                    if received_bytes == filesize:
+                        print(f"Upload complete: {filename} saved on server.")
+                        conn.sendall(b"UPLOAD_SUCCESS")
+                    else:
+                        print(f"Upload FAILED: Only received {received_bytes}/{filesize} bytes.")
+                        conn.sendall(b"UPLOAD_FAIL")
 
                 else:
                     conn.sendall(b"Unknown command.")
@@ -239,3 +156,15 @@ def handle_client(conn, addr):
             break
             
     conn.close()
+
+
+# Server listening setup (Day 1)
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.bind((HOST, PORT))
+    s.listen(5)
+    print(f"Listening on {HOST}:{PORT} ...")
+    
+    # Simple single-threaded server loop
+    while True:
+        conn, addr = s.accept()
+        handle_client(conn, addr)
