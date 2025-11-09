@@ -1,0 +1,75 @@
+# server.py - Updated handle_client with Day 5 Authentication
+def handle_client(conn, addr):
+    """Handles commands from a single client connection, requiring login."""
+    print(f"Connected by {addr}")
+    conn.sendall(b"HELLO FROM SERVER. PLEASE LOGIN.\n")
+    
+    # --- Day 5: Initialize Session State ---
+    logged_in = False
+    
+    # Main command loop: Server listens for commands until client disconnects
+    while True:
+        try:
+            data = conn.recv(1024)
+            if not data:
+                print(f"Client {addr} disconnected.")
+                break
+            
+            command = data.decode().strip()
+            print(f"Received command: '{command}'")
+
+            # --- Day 5: Handle LOGIN Command FIRST ---
+            if command.startswith("LOGIN"):
+                parts = command.split()
+                if len(parts) == 3:
+                    username = parts[1]
+                    password = parts[2]
+                    
+                    if username in VALID_USERS and VALID_USERS[username] == password:
+                        logged_in = True
+                        conn.sendall(b"LOGIN_SUCCESS")
+                        print(f"User {username} successfully logged in.")
+                    else:
+                        conn.sendall(b"LOGIN_FAIL: Invalid credentials.")
+                        print(f"Login attempt failed for user: {username}")
+                else:
+                    conn.sendall(b"ERROR: Usage: LOGIN <user> <pass>")
+            
+            # --- Enforce Authentication for all File Commands ---
+            elif logged_in:
+                # --- Day 2: Implement LIST command ---
+                if command == "LIST":
+                    # ... (Your existing LIST logic goes here) ...
+                    file_list = [f for f in os.listdir(SERVER_DIR) if os.path.isfile(os.path.join(SERVER_DIR, f))]
+                    list_response = "\n".join(file_list)
+                    if not file_list: list_response = "No files found in SERVER_FILES."
+                    conn.sendall(list_response.encode())
+                    print("Sent file list to client.")
+
+                # --- Day 3: Implement DOWNLOAD command ---
+                elif command.startswith("DOWNLOAD"):
+                    # ... (Your existing DOWNLOAD logic goes here, too long to include here) ...
+                    # If you use the code I provided earlier, the download logic should be placed here.
+                    
+                    # Placeholder for the actual download logic
+                    conn.sendall(b"COMMAND_DOWNLOAD_RECEIVED") # Remove this line and put the actual logic
+
+                # --- Day 4: Implement UPLOAD command ---
+                elif command.startswith("UPLOAD"):
+                    # ... (Your existing UPLOAD logic goes here, too long to include here) ...
+                    
+                    # Placeholder for the actual upload logic
+                    conn.sendall(b"COMMAND_UPLOAD_RECEIVED") # Remove this line and put the actual logic
+
+                else:
+                    conn.sendall(b"Unknown command.")
+            
+            # --- Response if Not Logged In ---
+            else:
+                conn.sendall(b"ERROR: Please log in first using LOGIN <user> <pass>")
+
+        except Exception as e:
+            print(f"An error occurred with client {addr}: {e}")
+            break
+            
+    conn.close()
