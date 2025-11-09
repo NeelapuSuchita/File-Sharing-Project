@@ -8,3 +8,35 @@ def run_client():
     upload_file(s, "file_to_upload.txt") 
     
     print("Client closing connection.")
+# client.py - Updated run_client with Day 5 Login
+def run_client():
+    # ... (connection logic) ...
+    
+    # 1. Receive initial greeting from server
+    greeting = s.recv(1024).decode().strip()
+    print("Server said:", greeting)
+    
+    # --- Day 5: Perform Login ---
+    # Use one of the valid credentials defined on the server (e.g., "user1", "pass123")
+    login_successful = login(s, "user1", "pass123") 
+    
+    if login_successful:
+        print("\n--- Starting Authenticated Operations ---")
+        
+        # --- Day 2: Send LIST command ---
+        s.sendall(b"LIST") 
+        # ... (LIST receiving logic) ...
+
+        # --- TEST DOWNLOAD (Day 3) ---
+        # download_file(s, "test_file.txt") 
+        
+        # --- TEST UPLOAD (Day 4) ---
+        # upload_file(s, "file_to_upload.txt") 
+        
+    else:
+        print("\n--- Aborting operations due to failed login. ---")
+        
+    print("Client closing connection.")
+
+
+# ... (rest of client file) ...
