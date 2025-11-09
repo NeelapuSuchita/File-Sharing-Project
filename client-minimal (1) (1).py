@@ -133,3 +133,21 @@ def upload_file(s, filename):
         print(f"Upload complete: {filename} successfully saved on server.")
     else:
         print(f"Upload failed. Server response: {final_status}")
+
+# client.py - Day 5: Login Function
+def login(s, username, password):
+    """Sends LOGIN command and checks server response."""
+    print(f"\nAttempting to log in as {username}...")
+    
+    command = f"LOGIN {username} {password}"
+    s.sendall(command.encode())
+    
+    # Receive the server response
+    response = s.recv(1024).decode().strip()
+    
+    if response == "LOGIN_SUCCESS":
+        print("Login Successful!")
+        return True
+    else:
+        print(f"Login Failed. Server response: {response}")
+        return False
