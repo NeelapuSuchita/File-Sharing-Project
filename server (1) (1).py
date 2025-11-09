@@ -163,6 +163,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 else:
                     print(f"Upload FAILED: Only received {received_bytes}/{filesize} bytes.")
                     conn.sendall(b"UPLOAD_FAIL")
+                    
 # server.py - Updated handle_client with Day 5 Authentication
 def handle_client(conn, addr):
     """Handles commands from a single client connection, requiring login."""
